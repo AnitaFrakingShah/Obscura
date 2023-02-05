@@ -23,4 +23,33 @@ public:
 
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+
+	//Movement and Rotation
+	void moveForward(float value);
+	void moveRight(float value);
+	void moveUp(float value);
+	void rotateCameraYaw(float value);
+	void rotateCameraPitch(float value);
+
+	//Bluepring Parameters
+	UPROPERTY(VisibleAnywhere)
+	class UCameraComponent* mCamera;
+
+	UPROPERTY(VisibleAnywhere)
+	class USpringArmComponent* mCameraArm;
+
+	UPROPERTY(EditAnywhere)
+	class UBoxComponent* mBoxCollision;
+
+	UPROPERTY(EditAnywhere)
+	class USkeletalMeshComponent* mSkeletalMesh;
+
+	UPROPERTY(EditAnywhere)
+	class UUserWidget* mCommanderWidgetRef;
+
+	UPROPERTY(EditAnywhere)
+	class UMaterialParameterCollection* mMaterialParamCollection;
+
+	UPROPERTY(EditAnywhere)
+	class UFloatingPawnMovement* mFloatingComponent;
 };

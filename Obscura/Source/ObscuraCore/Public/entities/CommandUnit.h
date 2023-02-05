@@ -29,17 +29,28 @@ public:
 	virtual void SetupPlayerInputComponent(class UInputComponent* playerInputComponent) override;
 
 private:
-	//Camera Control
-	void rotateCamera(float value);
-	void rotateCameraHorizontal(float value);
-	void switchCameras();
+	//Movement controls
+	void moveForward(float value);
+	void moveRight(float value);
 
-	UPROPERTY()
+	//Camera Control
+	void rotateCameraPitch(float value);
+	void rotateCameraYaw(float value);
+	void switchCameras();
+	void startBlend(float start, float end);
+
+	bool mCameraIsBlending = false;
+	float mCameraGoalLength = 0.0f;
+
+	UPROPERTY(VisibleAnywhere)
 	bool mFirstPersonMode = false;
 
-	UPROPERTY()
+	UPROPERTY(EditAnywhere)
+	float mBlendLerp = 0.2f;
+
+	UPROPERTY(VisibleAnywhere)
 	UCameraComponent* mCamera;
 
-	UPROPERTY()
+	UPROPERTY(VisibleAnywhere)
 	USpringArmComponent* mCameraArm;
 };
