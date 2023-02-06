@@ -31,6 +31,9 @@ public:
 	void rotateCameraYaw(float value);
 	void rotateCameraPitch(float value);
 
+	//Set Map Parameters
+	void setMapParameters();
+
 	//Bluepring Parameters
 	UPROPERTY(VisibleAnywhere)
 	class UCameraComponent* mCamera;
@@ -52,4 +55,10 @@ public:
 
 	UPROPERTY(EditAnywhere)
 	class UFloatingPawnMovement* mFloatingComponent;
+
+	UPROPERTY(EditAnywhere)
+	class UIconComponent* mIconComponent;
+
+private:
+	class UMaterialParameterCollectionInstance* mMaterialParamInstance;
 };

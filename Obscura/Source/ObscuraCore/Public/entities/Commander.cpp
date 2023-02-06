@@ -5,10 +5,12 @@
 #include "Camera/CameraComponent.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "Components/BoxComponent.h"
+#include "components/IconComponent.h"
 #include "GameFramework/FloatingPawnMovement.h"
 #include "Materials/MaterialParameterCollection.h"
 #include "Materials/MaterialParameterCollectionInstance.h"
 #include "GameFramework/SpringArmComponent.h"
+#include "world/map/Dimensions.h"
 
 ACommander::ACommander() {
 	PrimaryActorTick.bCanEverTick = true;
@@ -18,6 +20,8 @@ ACommander::ACommander() {
 	// Create Box Collision
 	mBoxCollision = CreateDefaultSubobject<UBoxComponent>(TEXT("Box Collision"));
 	SetRootComponent(mBoxCollision);
+
+	mIconComponent = CreateDefaultSubobject<UIconComponent>(TEXT("Icon Component"));
 
 	mSkeletalMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Skeletal Mesh"));
 	mSkeletalMesh->SetupAttachment(mBoxCollision);
@@ -44,11 +48,16 @@ ACommander::ACommander() {
 // Called when the game starts or when spawned
 void ACommander::BeginPlay() {
 	Super::BeginPlay();
+	if(!mMaterialParamInstance){ // if(mMaterialParamInstance == nullptr)
+		mMaterialParamInstance = GetWorld()->GetParameterCollectionInstance(mMaterialParamCollection);
+	}
 }
 
 // Called every frame
 void ACommander::Tick(float DeltaTime) {
 	Super::Tick(DeltaTime);
+	mCommanderWidgetRef->AddToViewport(0);
+	setMapParameters();
 }
 
 // Called to bind functionality to input
@@ -88,4 +97,12 @@ void ACommander::moveRight(float value) {
 
 void ACommander::moveUp(float value) {
 	AddMovementInput(GetActorUpVector() * value);
+}
+
+void ACommander::setMapParameters() {
+	FVector worldPosition = GetActorLocation();
+	// Rotation to come
+
+	mMaterialParamInstance->SetScalarParameterValue("Map_X_Coordinate", worldPosition.X / MAX_WORLD_X);
+	mMaterialParamInstance->SetScalarParameterValue("Map_Y_Coordinate", worldPosition.Y / MAX_WORLD_Y);
 }
