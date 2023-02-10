@@ -14,43 +14,69 @@ class ACommandUnit : public ACharacter
 
 public:
 	
-// Sets default values for a command unit
+	// Sets default values for a command unit
 	ACommandUnit();
 
-protected:
-	//Called when the game starts OR this unit is spawned
-	virtual void BeginPlay() override;
-
-public:
 	//Called every frame
 	virtual void Tick(float deltaTime) override;
 
 	//Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* playerInputComponent) override;
 
+protected:
+	//Called when the game starts OR this unit is spawned
+	virtual void BeginPlay() override;
+
 private:
-	//Movement controls
+
+	///////////////////////////////////////////////////////////////// Movement Functions ////////////////////////////////////
 	void moveForward(float value);
 	void moveRight(float value);
+	void setMovementBinds();
 
-	//Camera Control
+	//////////////////////////////////////////////////////////////////      Actions      /////////////////////////////////////////
+	void switchToCommander();
+	void switchCameras();
+	void setActionBinds();
+
+	///////////////////////////////////////////////////////////////// Camera Functions ////////////////////////////////////
 	void rotateCameraPitch(float value);
 	void rotateCameraYaw(float value);
-	void switchCameras();
 	void startBlend(float start, float end);
+	void updateBlend();
+	void setCameraBinds();
 
-	bool mCameraIsBlending = false;
-	float mCameraGoalLength = 0.0f;
+	///////////////////////////////////////////////////////////////// Player Controller Functions ////////////////////////////////////
+	UFUNCTION()
+	void onSelected(AActor* Target, FKey ButtonPressed);
+	void setPlayerController();
 
-	UPROPERTY(VisibleAnywhere)
-	bool mFirstPersonMode = false;
+	//////////////////////////////////////////////////////////////// Component Maintenance Functions /////////////////////////////////
+	void updateIconComponent();
 
-	UPROPERTY(EditAnywhere)
-	float mBlendLerp = 0.2f;
-
+	////////////////////////////////////////////////////////////////// Blueprint Components /////////////////////////////////////////
 	UPROPERTY(VisibleAnywhere)
 	UCameraComponent* mCamera;
 
 	UPROPERTY(VisibleAnywhere)
 	USpringArmComponent* mCameraArm;
+
+	UPROPERTY(EditAnywhere)
+	class UIconComponent* mIconComponent;
+
+	UPROPERTY(VisibleAnywhere)
+	bool mFirstPersonMode = false;
+
+	////////////////////////////////////////////////////////////////// Blueprint Variables /////////////////////////////////////////
+
+	UPROPERTY(EditAnywhere)
+	float mBlendLerp = 0.2f;
+
+	UPROPERTY(EditAnywhere)
+	class ACommander* mOwningCommander;
+
+	////////////////////////////////////////////////////////////////// Private Class Parameters /////////////////////////////////////////
+
+	bool mCameraIsBlending = false;
+	float mCameraGoalLength = 0.0f;
 };

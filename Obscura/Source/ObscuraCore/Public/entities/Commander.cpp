@@ -5,7 +5,8 @@
 #include "Camera/CameraComponent.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "Components/BoxComponent.h"
-#include "components/IconComponent.h"
+#include "components/FocalComponent.h"
+#include "GameFramework/PlayerController.h"
 #include "GameFramework/FloatingPawnMovement.h"
 #include "Materials/MaterialParameterCollection.h"
 #include "Materials/MaterialParameterCollectionInstance.h"
@@ -15,17 +16,17 @@
 ACommander::ACommander() {
 	PrimaryActorTick.bCanEverTick = true;
 	AutoPossessPlayer = EAutoReceiveInput::Player0;
-
 	bUseControllerRotationYaw = false;
-	// Create Box Collision
+
+	// Create Box Collision set as root
 	mBoxCollision = CreateDefaultSubobject<UBoxComponent>(TEXT("Box Collision"));
 	SetRootComponent(mBoxCollision);
 
-	mIconComponent = CreateDefaultSubobject<UIconComponent>(TEXT("Icon Component"));
-
+	// Create skeletal mesh component
 	mSkeletalMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Skeletal Mesh"));
 	mSkeletalMesh->SetupAttachment(mBoxCollision);
 
+	//Setup camera and camera components
 	mCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
 	mCameraArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("Spring Arm"));
 
@@ -42,50 +43,39 @@ ACommander::ACommander() {
 	mCameraArm->CameraLagMaxTimeStep = 1;
 
 	mCamera->SetupAttachment(mCameraArm, USpringArmComponent::SocketName);
+
+	//Set up floating movement to give "drone" like feel
 	mFloatingComponent = CreateDefaultSubobject<UFloatingPawnMovement>(TEXT("Floating Movement"));
+
+	//Set up focal component for focal widget on map
+	mFocalComponent = CreateDefaultSubobject<UFocalComponent>(TEXT("Focal Component"));
 }
 
 // Called when the game starts or when spawned
 void ACommander::BeginPlay() {
 	Super::BeginPlay();
-	if(!mMaterialParamInstance){ // if(mMaterialParamInstance == nullptr)
-		mMaterialParamInstance = GetWorld()->GetParameterCollectionInstance(mMaterialParamCollection);
-	}
 }
 
 // Called every frame
 void ACommander::Tick(float DeltaTime) {
 	Super::Tick(DeltaTime);
-	mCommanderWidgetRef->AddToViewport(0);
-	setMapParameters();
+	updateMapParameters();
 }
 
 // Called to bind functionality to input
 void ACommander::SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) {
-
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
-
-	InputComponent->BindAxis("rotateCameraYaw", this, &ACommander::rotateCameraYaw);
-	InputComponent->BindAxis("rotateCameraPitch", this, &ACommander::rotateCameraPitch);
-	InputComponent->BindAxis("moveForward", this, &ACommander::moveForward);
-	InputComponent->BindAxis("moveRight", this, &ACommander::moveRight);
-	InputComponent->BindAxis("moveUp", this, &ACommander::moveUp);
+	setMovementBinds();
+	setMapParameters();
+	setPlayerController();
 }
 
-void ACommander::rotateCameraYaw(float value) {
-	if(value) {
-		AddActorWorldRotation(FRotator(0.0f, value, 0.0f));
-	}
+void ACommander::HideMap() {
+	mCommanderWidgetRef->RemoveFromParent();
+	mFocalComponent->ShowWidget(false);
 }
 
-void ACommander::rotateCameraPitch(float value) {
-	if(value) {
-		float newPitchRotation = mCameraArm->GetRelativeRotation().Pitch + value;
-		if(newPitchRotation < 25 && newPitchRotation > -65) {
-			mCameraArm->AddLocalRotation(FRotator(value, 0.0f, 0.0f));
-		}
-	}
-}
+//////////////////////////////////////// PRIVATE MOVEMENT FUNCTIONS //////////////////////////////////////////
 
 void ACommander::moveForward(float value) {
 	AddMovementInput(GetActorForwardVector() * value);
@@ -95,14 +85,42 @@ void ACommander::moveRight(float value) {
 	AddMovementInput(GetActorRightVector() * value);
 }
 
-void ACommander::moveUp(float value) {
-	AddMovementInput(GetActorUpVector() * value);
+void ACommander::setMovementBinds() {
+	InputComponent->BindAxis("moveForward", this, &ACommander::moveForward);
+	InputComponent->BindAxis("moveRight", this, &ACommander::moveRight);
+}
+
+//////////////////////////////////////// PRIVATE CONTROLLER SETUP FUNCTIONS //////////////////////////////////
+void ACommander::setPlayerController() {
+}
+
+/////////////////////////////////////// PRIVATE MAP FUNCTIONS ////////////////////////////////////////////////
+void ACommander::updateMapParameters() {
+	if(!mMaterialParamInstance) {
+		return;
+	}
+
+	FVector worldPosition = GetActorLocation();
+	FVector cameraForward = mCameraArm->GetForwardVector();
+
+	float multiplier = (worldPosition.Z - SURFACE_LEVEL) / cameraForward.Z;
+	float X = worldPosition.X - (cameraForward.X * multiplier);
+	float Y = worldPosition.Y - (cameraForward.Y * multiplier);
+
+	mMaterialParamInstance->SetScalarParameterValue("Map_X_Coordinate", X / MAX_WORLD_X);
+	mMaterialParamInstance->SetScalarParameterValue("Map_Y_Coordinate", Y / MAX_WORLD_Y);
+	mMaterialParamInstance->SetScalarParameterValue("Map_Center_World_X", X);
+	mMaterialParamInstance->SetScalarParameterValue("Map_Center_World_Y", Y);
 }
 
 void ACommander::setMapParameters() {
-	FVector worldPosition = GetActorLocation();
-	// Rotation to come
-
-	mMaterialParamInstance->SetScalarParameterValue("Map_X_Coordinate", worldPosition.X / MAX_WORLD_X);
-	mMaterialParamInstance->SetScalarParameterValue("Map_Y_Coordinate", worldPosition.Y / MAX_WORLD_Y);
+	if(!mMaterialParamInstance){
+		mMaterialParamInstance = GetWorld()->GetParameterCollectionInstance(mMaterialParamCollection);
+		mMaterialParamInstance->SetScalarParameterValue("MAX_WORLD_X", MAX_WORLD_X);
+		mMaterialParamInstance->SetScalarParameterValue("MAX_WORLD_Y", MAX_WORLD_Y);
+		mMaterialParamInstance->SetScalarParameterValue("WORLD_MAP_MAX_X_SCALE", WORLD_MAP_MAX_X_SCALE);
+		mMaterialParamInstance->SetScalarParameterValue("SURFACE_LEVEL", SURFACE_LEVEL);
+	}
+	mCommanderWidgetRef->AddToViewport(0);
+	mFocalComponent->ShowWidget(true);
 }

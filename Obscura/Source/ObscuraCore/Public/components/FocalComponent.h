@@ -2,17 +2,17 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
-#include "IconComponent.generated.h"
+#include "FocalComponent.generated.h"
 
 UCLASS()
-class UIconComponent : public UActorComponent {
+class UFocalComponent : public UActorComponent {
 
 	GENERATED_BODY()
 public:
-	UIconComponent();
-	UIconComponent(const FObjectInitializer& InObjectInitializer);
-	void ShowWidget(bool active);
+	UFocalComponent();
+	UFocalComponent(const FObjectInitializer& InObjectInitializer);
 	virtual void TickComponent(float deltaTime, enum ELevelTick tickType, FActorComponentTickFunction* func) override;
+	void ShowWidget(bool active);
 
 protected:
 	virtual void BeginPlay() override;
@@ -20,16 +20,10 @@ protected:
 private:
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<UUserWidget> mWidgetClass;
-	
+
 	UPROPERTY()
 	class UIconWidget* mIconWidget;
-
-	UPROPERTY(EditAnywhere)
-	class UMaterialParameterCollection* mMaterialParamCollection;
-
-	UPROPERTY()
-	class UMaterialParameterCollectionInstance* mMaterialParamInstance;
-
+	
 	bool mIconAddedToViewport = false;
 	bool mIsActive = false;
 };

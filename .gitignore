@@ -476,3 +476,11 @@ Obscura/Saved/Autosaves/PackageRestoreData.json
 Obscura/Saved/Autosaves/Game/__ExternalActors__/ThirdPerson/Maps/ThirdPersonMap/1/AZ/A7GPT109Y6ZTTJD4A7TXER_Auto1.uasset
 Obscura/Saved/Autosaves/Game/__ExternalActors__/ThirdPerson/Maps/ThirdPersonMap/6/YO/NG2R9BPZVA7ZDN0Z4VSTG6_Auto2.uasset
 Obscura/Saved/Autosaves/Game/__ExternalActors__/ThirdPerson/Maps/ThirdPersonMap/8/VX/J4END4DTXIZDQYMYRXFO4Q_Auto1.uasset
+*.runtime-xml
+*.dmp
+Obscura/Intermediate/Build/Win64/UnrealEditor/Development/ObscuraCore/FocalComponent.cpp.dep.json
+Obscura/Intermediate/Build/Win64/UnrealEditor/Development/ObscuraCore/FocalComponent.cpp.obj.response
+Obscura/Intermediate/Build/Win64/UnrealEditor/Development/ObscuraCore/FocalComponent.gen.cpp.dep.json
+Obscura/Intermediate/Build/Win64/UnrealEditor/Development/ObscuraCore/FocalComponent.gen.cpp.obj.response
+*.uasset
+*.umap

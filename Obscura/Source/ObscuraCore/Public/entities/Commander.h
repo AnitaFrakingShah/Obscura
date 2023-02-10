@@ -13,28 +13,43 @@ public:
 	// Sets default values for this pawn's properties
 	ACommander();
 
-protected:
-	// Called when the game starts or when spawned
-	virtual void BeginPlay() override;
-
-public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
-	//Movement and Rotation
+	//Hides the Map Widget
+	void HideMap();
+
+protected:
+	// Called when the game starts or when spawned
+	virtual void BeginPlay() override;
+
+private:	
+	//////////////////////////////////////////////////   Movement Functions
 	void moveForward(float value);
 	void moveRight(float value);
-	void moveUp(float value);
-	void rotateCameraYaw(float value);
-	void rotateCameraPitch(float value);
+	void setMovementBinds();
 
-	//Set Map Parameters
+	/////////////////////////////////////////////////   Map functions
 	void setMapParameters();
+	void updateMapParameters();
 
-	//Bluepring Parameters
+	/////////////////////////////////////////////////   Input Functions for game mode
+	void setPlayerController();
+
+	////////////////////////////////////////////////    Parameters needed for map updates
+	UPROPERTY()
+	class UMaterialParameterCollectionInstance* mMaterialParamInstance;
+
+	UPROPERTY(EditAnywhere)
+	class UMaterialParameterCollection* mMaterialParamCollection;
+
+	UPROPERTY(EditAnywhere)
+	class UUserWidget* mCommanderWidgetRef;
+
+	///////////////////////////////////////////////////   Blueprint And Component Parameters
 	UPROPERTY(VisibleAnywhere)
 	class UCameraComponent* mCamera;
 
@@ -48,17 +63,8 @@ public:
 	class USkeletalMeshComponent* mSkeletalMesh;
 
 	UPROPERTY(EditAnywhere)
-	class UUserWidget* mCommanderWidgetRef;
-
-	UPROPERTY(EditAnywhere)
-	class UMaterialParameterCollection* mMaterialParamCollection;
-
-	UPROPERTY(EditAnywhere)
 	class UFloatingPawnMovement* mFloatingComponent;
 
 	UPROPERTY(EditAnywhere)
-	class UIconComponent* mIconComponent;
-
-private:
-	class UMaterialParameterCollectionInstance* mMaterialParamInstance;
+	class UFocalComponent* mFocalComponent;
 };
