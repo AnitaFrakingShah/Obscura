@@ -15,7 +15,7 @@ class ACommandUnit : public ACharacter
 public:
 	
 	// Sets default values for a command unit
-	ACommandUnit();
+	ACommandUnit(const FObjectInitializer& ObjectInitializer);
 
 	//Called every frame
 	virtual void Tick(float deltaTime) override;
@@ -23,16 +23,27 @@ public:
 	//Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* playerInputComponent) override;
 
+	UFUNCTION(BlueprintPure)
+	class UCustomCharacterMovementComponent* GetCustomCharacterMovement() const { return MovementComponent; }
+
 protected:
 	//Called when the game starts OR this unit is spawned
 	virtual void BeginPlay() override;
+	
+	UPROPERTY(Category=Character, VisibleAnywhere, BlueprintReadOnly)
+	class UCustomCharacterMovementComponent* MovementComponent;
 
 private:
 
 	///////////////////////////////////////////////////////////////// Movement Functions ////////////////////////////////////
 	void moveForward(float value);
 	void moveRight(float value);
+	void toggleSprint();
+	void jump();
+	void climb();
 	void setMovementBinds();
+	void updateSpeed();
+	void rotateActor();
 
 	//////////////////////////////////////////////////////////////////      Actions      /////////////////////////////////////////
 	void switchToCommander();
@@ -73,10 +84,20 @@ private:
 	float mBlendLerp = 0.2f;
 
 	UPROPERTY(EditAnywhere)
+	float mSprintSpeed = 1.5f;
+
+	UPROPERTY(EditAnywhere)
+	float mWalkSpeed = 0.5f;
+
+	UPROPERTY(EditAnywhere)
 	class ACommander* mOwningCommander;
 
 	////////////////////////////////////////////////////////////////// Private Class Parameters /////////////////////////////////////////
 
+
+	float mCurrentSpeed = 0.1f;
+	float mGoalSpeed = 0.1f;
 	bool mCameraIsBlending = false;
 	float mCameraGoalLength = 0.0f;
+	FVector mLastInput = FVector::ZeroVector;
 };

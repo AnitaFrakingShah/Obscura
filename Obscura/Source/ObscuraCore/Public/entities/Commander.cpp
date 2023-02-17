@@ -92,6 +92,20 @@ void ACommander::setMovementBinds() {
 
 //////////////////////////////////////// PRIVATE CONTROLLER SETUP FUNCTIONS //////////////////////////////////
 void ACommander::setPlayerController() {
+	// change input mode (mouse is locked, mouse viewable, enable click events, enable hover over events, and interacting with UI elements)
+	APlayerController* controller = Cast<APlayerController>(GetController());
+	if(controller) {
+		FInputModeGameAndUI gameMode = FInputModeGameAndUI();
+		gameMode.SetLockMouseToViewportBehavior(EMouseLockMode::LockAlways);
+		gameMode.SetHideCursorDuringCapture(false);
+
+		controller->SetInputMode(gameMode);
+		controller->bShowMouseCursor = true;
+		controller->bEnableClickEvents = true;
+		controller->bEnableMouseOverEvents = true;
+
+		//controller->DefaultClickTraceChannel = ECollisionChannel::ECC_Camera;
+	}
 }
 
 /////////////////////////////////////// PRIVATE MAP FUNCTIONS ////////////////////////////////////////////////
