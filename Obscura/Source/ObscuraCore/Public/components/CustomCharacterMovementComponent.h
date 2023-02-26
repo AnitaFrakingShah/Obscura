@@ -36,13 +36,19 @@ private:
 
 	//Functions for _physicsForClimbing
 	void _computeSurfaceInfo();
-	void _computeClimbingVelocity(float deltaTime);
-	bool _isLocationWalkable(const FVector& CheckLocation) const;
+	void _computeClimbingVelocity(float deltaTime, const bool calculateVelocity);
 	bool _shouldStopClimbing();
 	void _stopClimbing(float deltaTime, int32 Iterations);
 	void _moveAlongClimbingSurface(float deltaTime);
 	void _snapToClimbingSurface(float deltaTime) const;
 	FQuat _getClimbingRotation(float deltaTime) const;
+	
+
+	UPROPERTY(Category="Character Movement: Climbing", EditAnywhere)
+	UAnimMontage* LedgeClimbMontage;
+
+	UPROPERTY()
+	UAnimInstance* AnimInstance;
 
 	UPROPERTY(Category="Character Movement: Climbing", EditAnywhere, meta=(ClampMin="0.0", ClampMax="80.0"))
 	float mClimbingCollisionShrinkAmount = 30;

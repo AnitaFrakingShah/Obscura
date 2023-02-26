@@ -78,8 +78,8 @@ void ACommandUnit::rotateActor() {
 	FVector input = mLastInput.GetUnsafeNormal2D();
 	FVector forwardMovement = GetActorForwardVector().GetUnsafeNormal2D();
 
-	float inputAngle = UKismetMathLibrary::Atan2(input.Y,input.X)* 57.2958f;
-	float forwardMovementAngle = UKismetMathLibrary::Atan2(forwardMovement.Y,forwardMovement.X)* 57.2958f;
+	float inputAngle = UKismetMathLibrary::Atan2(input.Y,input.X) * 57.2958f;
+	float forwardMovementAngle = UKismetMathLibrary::Atan2(forwardMovement.Y,forwardMovement.X) * 57.2958f;
 	float angle = inputAngle - forwardMovementAngle;
 	angle = angle > 180 ?  - (360 - angle) : angle;
 	angle = angle < -180 ? (360 + angle) : angle; 

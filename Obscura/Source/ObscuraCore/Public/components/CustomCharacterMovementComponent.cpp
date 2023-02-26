@@ -14,6 +14,7 @@ void UCustomCharacterMovementComponent::BeginPlay()
 	Super::BeginPlay();
 
 	ClimbQueryParams.AddIgnoredActor(GetOwner());
+	AnimInstance = GetCharacterOwner()->GetMesh()->GetAnimInstance();
 }
 
 void UCustomCharacterMovementComponent::handleClimbInput() {
@@ -21,7 +22,7 @@ void UCustomCharacterMovementComponent::handleClimbInput() {
 		mIsClimbing = false;
 	}
 	else if(_canStartClimbing()) {
-		mIsClimbing = true; 
+		mIsClimbing = true;
 	}
 }
 
@@ -94,33 +95,6 @@ void UCustomCharacterMovementComponent::PhysCustom(float deltaTime, int32 Iterat
 }
 
 // Functions for physics climbing
-void UCustomCharacterMovementComponent::_physicsForClimbing(float deltaTime, int32 Iterations) {
-	if (deltaTime < MIN_TICK_TIME)
-	{
-		return;
-	}
-	_computeSurfaceInfo();
-	if (_shouldStopClimbing())
-	{
-		_stopClimbing(deltaTime, Iterations);
-		return;
-	}
-
-	_computeClimbingVelocity(deltaTime);
-
-	const FVector OldLocation = UpdatedComponent->GetComponentLocation();
-
-	_moveAlongClimbingSurface(deltaTime);
-
-	if (!HasAnimRootMotion() && !CurrentRootMotion.HasOverrideVelocity())
-	{
-		Velocity = (UpdatedComponent->GetComponentLocation() - OldLocation) / deltaTime;
-	}
-
-	_snapToClimbingSurface(deltaTime);
-
-}
-
 void UCustomCharacterMovementComponent::_computeSurfaceInfo() {
 	mCurrentClimbingNormal = FVector::ZeroVector;
 	mCurrentClimbingPosition = FVector::ZeroVector;
@@ -142,24 +116,46 @@ void UCustomCharacterMovementComponent::_computeSurfaceInfo() {
 	mCurrentClimbingNormal = mCurrentClimbingNormal.GetSafeNormal();
 }
 
-void UCustomCharacterMovementComponent::_computeClimbingVelocity(float deltaTime) {
+void UCustomCharacterMovementComponent::_physicsForClimbing(float deltaTime, int32 Iterations) {
+	if (deltaTime < MIN_TICK_TIME)
+	{
+		return;
+	}
+
+	bool animationInControl = HasAnimRootMotion() || CurrentRootMotion.HasOverrideVelocity();
+	if(!animationInControl) {
+		_computeSurfaceInfo();
+	}
+
+	if (_shouldStopClimbing())
+	{
+		_stopClimbing(deltaTime, Iterations);
+		return;
+	}
+
+	_computeClimbingVelocity(deltaTime, !animationInControl);
+
+	const FVector OldLocation = UpdatedComponent->GetComponentLocation();
+
+	_moveAlongClimbingSurface(deltaTime);
+
+	if (!animationInControl)
+	{
+		Velocity = (UpdatedComponent->GetComponentLocation() - OldLocation) / deltaTime;
+	}
+
+	_snapToClimbingSurface(deltaTime);
+
+}
+
+void UCustomCharacterMovementComponent::_computeClimbingVelocity(float deltaTime, const bool calculateVelocity) {
 	RestorePreAdditiveRootMotionVelocity();
-	if (!HasAnimRootMotion() && !CurrentRootMotion.HasOverrideVelocity()) {
+	if (calculateVelocity) {
 		constexpr float friction = 0.0f;
 		constexpr bool isFluid = false;
 		CalcVelocity(deltaTime, friction, isFluid, mBrakingDecelerationClimbing);
 	}
 	ApplyRootMotionToVelocity(deltaTime);
-}
-
-bool UCustomCharacterMovementComponent::_isLocationWalkable(const FVector& CheckLocation) const {
-	const FVector CheckEnd = CheckLocation + (FVector::DownVector * 250.f);
-
-	FHitResult LedgeHit;
-	const bool bHitLedgeGround = GetWorld()->LineTraceSingleByChannel(LedgeHit, CheckLocation, CheckEnd,
-	                                                                  ECC_WorldStatic, ClimbQueryParams);
-
-	return bHitLedgeGround && LedgeHit.Normal.Z >= GetWalkableFloorZ();
 }
 
 bool UCustomCharacterMovementComponent::_shouldStopClimbing() {
