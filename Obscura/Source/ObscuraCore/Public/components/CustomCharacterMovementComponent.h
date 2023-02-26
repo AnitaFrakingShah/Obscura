@@ -1,18 +1,23 @@
 #pragma once
- 
+
 #include "CoreMinimal.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "CustomCharacterMovementComponent.generated.h"
 
 UCLASS()
-class UCustomCharacterMovementComponent : public UCharacterMovementComponent {
-GENERATED_BODY()
+class UCustomCharacterMovementComponent : public UCharacterMovementComponent
+{
+	GENERATED_BODY()
 
 public:
 	UCustomCharacterMovementComponent();
-	bool isClimbing() const;
-	FVector getClimbSurfaceNormal() const;
 	void handleClimbInput();
+
+	UFUNCTION(BlueprintPure)
+	bool isClimbing() const;
+
+	UFUNCTION(BlueprintPure)
+	FVector getClimbSurfaceNormal() const;
 
 private:
 	virtual void BeginPlay() override;
@@ -25,16 +30,28 @@ private:
 
 	void _physicsForClimbing(float deltaTime, int32 Iterations);
 	void _sweepAndStoreWallHits();
-	bool _canStartClimbing();
-	bool _facingSurface();
-	bool _eyeHeightTrace();
+	bool _eyeHeightTrace(const float traceDistance) const;
+	bool _facingSurface(const float scale) const;
+	bool _canStartClimbing() const;
+
+	//Functions for _physicsForClimbing
 	void _computeSurfaceInfo();
+	void _computeClimbingVelocity(float deltaTime);
+	bool _isLocationWalkable(const FVector& CheckLocation) const;
 	bool _shouldStopClimbing();
 	void _stopClimbing(float deltaTime, int32 Iterations);
-	void _computeClimbingVelocity(float deltaTime);
 	void _moveAlongClimbingSurface(float deltaTime);
-	void _snapToClimbingSurface(float deltaTime);
-	FQuat _getClimbingRotation(float deltaTime);
+	void _snapToClimbingSurface(float deltaTime) const;
+	FQuat _getClimbingRotation(float deltaTime) const;
+
+	UPROPERTY(Category="Character Movement: Climbing", EditAnywhere, meta=(ClampMin="0.0", ClampMax="80.0"))
+	float mClimbingCollisionShrinkAmount = 30;
+
+	UPROPERTY(Category="Character Movement: Climbing", EditAnywhere, meta=(ClampMin="1.0", ClampMax="75.0"))
+	float mMinHorizontalDegreesToStartClimbing = 25;
+
+	UPROPERTY(Category="Character Movement: Climbing", EditAnywhere, meta=(ClampMin="0.01", ClampMax="5.0"))
+	float mOffset = 0.1f;
 
 	UPROPERTY(Category="Character Movement: Climbing", EditAnywhere, meta=(ClampMin="10.0", ClampMax="500.0"))
 	float mMaxClimbingSpeed = 120.f;
@@ -42,20 +59,24 @@ private:
 	UPROPERTY(Category="Character Movement: Climbing", EditAnywhere, meta=(ClampMin="10.0", ClampMax="2000.0"))
 	float mMaxClimbingAcceleration = 380.f;
 
-	UPROPERTY(Category="Character Movement: Climbing", EditAnywhere, meta=(ClampMin="10.0", ClampMax="2000.0"))
-	float mClimbingDeceleration = 550.0f;
+	UPROPERTY(Category="Character Movement: Climbing", EditAnywhere, meta=(ClampMin="0.0", ClampMax="3000.0"))
+	float mBrakingDecelerationClimbing = 550.f;
+	
+	UPROPERTY(Category="Character Movement: Climbing", EditAnywhere, meta=(ClampMin="1.0", ClampMax="12.0"))
+	int mClimbingRotationSpeed = 6;
 
-	UPROPERTY(Category="Character Movement: Climbing", EditAnywhere, meta=(ClampMin="15.0", ClampMax="75.0"))
-	float mMinHorizontalDegrees = 25.0f;
+	UPROPERTY(Category="Character Movement: Climbing", EditAnywhere, meta=(ClampMin="0.0", ClampMax="60.0"))
+	float mClimbingSnapSpeed = 4.f;
+
+	UPROPERTY(Category="Character Movement: Climbing", EditAnywhere, meta=(ClampMin="0.0", ClampMax="80.0"))
+	float mDistanceFromSurface = 45.f;
 
 	int mCollisionCapsuleRadius = 50;
 	int mCollisionCapsuleHalfHeight = 72;
-	struct FCollisionQueryParams mClimbQueryParams;
+	class TArray<struct FHitResult> mWallHitsScratchpad;
+	struct FCollisionQueryParams ClimbQueryParams;
 
 	bool mIsClimbing = false;
 	FVector mCurrentClimbingNormal;
 	FVector mCurrentClimbingPosition;
-	class TArray<struct FHitResult> mWallHitsScratchpad;
-	float mGoalDistanceFromSurface = 45.0f;
-	float mClimbingSnapSpeed = 3.5f;
 };

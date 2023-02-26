@@ -7,7 +7,7 @@
 class UCameraComponent;
 class USpringArmComponent;
 
-UCLASS()
+UCLASS(config=Game)
 class ACommandUnit : public ACharacter
 {
 	GENERATED_BODY()
