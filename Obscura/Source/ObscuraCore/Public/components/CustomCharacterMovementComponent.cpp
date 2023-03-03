@@ -138,6 +138,7 @@ void UCustomCharacterMovementComponent::_physicsForClimbing(float deltaTime, int
 	const FVector OldLocation = UpdatedComponent->GetComponentLocation();
 
 	_moveAlongClimbingSurface(deltaTime);
+	_tryClimbUpLedge();
 
 	if (!animationInControl)
 	{
@@ -218,7 +219,7 @@ void UCustomCharacterMovementComponent::_sweepAndStoreWallHits() {
 	GetWorld()->SweepMultiByChannel(mWallHitsScratchpad, start, end, FQuat::Identity, ECC_WorldStatic, collisionShape, ClimbQueryParams);
 }
 
-bool UCustomCharacterMovementComponent::_eyeHeightTrace(const float traceDistance) const { 
+bool UCustomCharacterMovementComponent::_eyeHeightTrace(const float traceDistance, bool debugDraw) const { 
 	FHitResult eyeLevelHit;
 
 	const float BaseEyeHeight = GetCharacterOwner()->BaseEyeHeight;
@@ -228,7 +229,17 @@ bool UCustomCharacterMovementComponent::_eyeHeightTrace(const float traceDistanc
 	
 	const FVector end = start + (UpdatedComponent->GetForwardVector() * traceDistance);
 
-	return GetWorld()->LineTraceSingleByChannel(eyeLevelHit, start, end, ECC_WorldStatic, ClimbQueryParams);
+	bool hitSomething = GetWorld()->LineTraceSingleByChannel(eyeLevelHit, start, end, ECC_WorldStatic, ClimbQueryParams);
+	if(debugDraw) {
+			DrawDebugLine(
+					GetWorld(),
+					start,
+					eyeLevelHit.Location,
+					FColor(255, 255, 255),
+					false, 15, 0,
+					12.3);
+	}
+	return hitSomething;
 }
 
 bool UCustomCharacterMovementComponent::_facingSurface(const float scale) const { 
@@ -248,3 +259,57 @@ bool UCustomCharacterMovementComponent::_canStartClimbing() const {
 	}
 	return false;
 }
+
+void UCustomCharacterMovementComponent::_tryClimbUpLedge() const {
+	if(AnimInstance && LedgeClimbMontage && AnimInstance->Montage_IsPlaying(LedgeClimbMontage)) {
+		return;
+	}
+
+	const float upSpeed = FVector::DotProduct(Velocity, UpdatedComponent->GetUpVector());
+	const bool isMovingUp = upSpeed >= mMaxClimbingSpeed / 4.0f;
+
+	if(isMovingUp  && _hasReachedEdge() && _canMoveOverEdge()) {
+		const FRotator standRotation = FRotator(0.0f, UpdatedComponent->GetComponentRotation().Yaw, 0.0f);
+		UpdatedComponent->SetRelativeRotation(standRotation);
+
+		AnimInstance->Montage_Play(LedgeClimbMontage);
+	}
+}
+
+
+bool UCustomCharacterMovementComponent::_hasReachedEdge() const {
+	const UCapsuleComponent* capsule = CharacterOwner->GetCapsuleComponent();
+	const float traceDistance = capsule->GetUnscaledCapsuleRadius() * 2.5f;
+
+	return !_eyeHeightTrace(traceDistance, false);
+}
+
+
+bool UCustomCharacterMovementComponent::_canMoveOverEdge() const {
+	const UCapsuleComponent* capsule = CharacterOwner->GetCapsuleComponent();
+	const FVector verticalOffset = capsule->GetScaledCapsuleHalfHeight() * 2.0f * FVector::UpVector;
+	const FVector horizontalOffset = capsule->GetUnscaledCapsuleRadius() * 2.5f * UpdatedComponent->GetForwardVector();
+
+	const FVector locationToCheck = UpdatedComponent->GetComponentLocation() + verticalOffset + horizontalOffset;
+
+	if(!_isLocationWalkable(locationToCheck)) {
+		return false;
+	}
+
+	FHitResult CapsuleHit;
+	const FVector start = locationToCheck - horizontalOffset;
+	const bool isBlocked = GetWorld()->SweepSingleByChannel(CapsuleHit, start, locationToCheck, 
+		FQuat::Identity, ECC_WorldStatic, capsule->GetCollisionShape(), ClimbQueryParams);
+
+	return !isBlocked;
+}
+
+bool UCustomCharacterMovementComponent::_isLocationWalkable(const FVector& locationToCheck) const {
+	const FVector end = locationToCheck + (FVector::DownVector * 250.0f);
+	FHitResult groundHit;
+
+	const bool hitGround = GetWorld()->LineTraceSingleByChannel(groundHit, locationToCheck, end, 
+		ECC_WorldStatic, ClimbQueryParams);
+
+	return hitGround && groundHit.Normal.Z >= GetWalkableFloorZ();
+} 

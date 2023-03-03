@@ -30,9 +30,10 @@ private:
 
 	void _physicsForClimbing(float deltaTime, int32 Iterations);
 	void _sweepAndStoreWallHits();
-	bool _eyeHeightTrace(const float traceDistance) const;
+	bool _eyeHeightTrace(const float traceDistance, bool debugDraw = false) const;
 	bool _facingSurface(const float scale) const;
 	bool _canStartClimbing() const;
+
 
 	//Functions for _physicsForClimbing
 	void _computeSurfaceInfo();
@@ -42,6 +43,10 @@ private:
 	void _moveAlongClimbingSurface(float deltaTime);
 	void _snapToClimbingSurface(float deltaTime) const;
 	FQuat _getClimbingRotation(float deltaTime) const;
+	void _tryClimbUpLedge() const;
+	bool _hasReachedEdge() const;
+	bool _canMoveOverEdge() const;
+	bool _isLocationWalkable(const FVector& locationToCheck) const;
 	
 
 	UPROPERTY(Category="Character Movement: Climbing", EditAnywhere)
